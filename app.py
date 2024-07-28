@@ -2,19 +2,21 @@
 Додаток на основі DCGAN для Виявлення Спроб Обходу Капчі - 2024
 '''
 
+from pathlib import Path
 import streamlit as st
 import numpy as np
-
 from PIL import Image
+import tensorflow as tf
 from tensorflow.keras.models import load_model
+
+from settings import IMAGE_MAX_HEIGTH,\
+                        MODELS_DIR, GEN_FILE, DISC_FILE
 
 # Завантаження моделей
 def load_models():
     '''Завантаження моделей'''
-    # gen_file = "generator.h5"
-    gen_file = "generator_model.h5"
-    # disc_file = "discriminator.h5"
-    disc_file = "disc_model.h5"
+    gen_file = Path(MODELS_DIR) / Path(GEN_FILE)
+    disc_file = Path(MODELS_DIR) / Path(DISC_FILE)
     gen = load_model(gen_file)
     disc = load_model(disc_file)
     return gen, disc
@@ -58,15 +60,17 @@ def prepare_image(img):
     img = np.expand_dims(img, axis=0)
     return img
 
-def gen_show_image(gen, disc, latent_dim):
+def gen_show_image(gen, disc, real_img, latent_dim):
     '''Генерація зображення'''
-    noise = np.random.normal(0, 1, (1, latent_dim))
-    generated_img = gen.predict(noise)
+    st.write(f"real_img.shape = {real_img.shape}")
+    noise = tf.random.normal([1, latent_dim])
+    st.write(f"noise shape = {noise.shape}")
+    generated_img = gen.predict(noise, verbose=0)
     # Відображення згенерованого зображення
     st.session_state.generated_image = Image.fromarray(generated_img[0], "RGB")
     show_image(img=st.session_state.generated_image,
                 caption="Згенероване зображення",
-                height=100)
+                height=IMAGE_MAX_HEIGTH)
     show_predictions(disc=disc,
                      img=generated_img,
                      img_class="згенерованого")
@@ -87,7 +91,8 @@ def show_image(img, caption = "",height = 100):
 
 def show_predictions(disc, img, img_class:str):
     '''Виведення результатів роботи дискримінатора'''
-    prediction = disc.predict(img)
+    prediction = disc.predict(img, verbose=0)
+    # prediction = 0.3
     predicted_class = "Real" if prediction >= 0.5 else "Fake"
     probability = prediction[0][0]
     st.write(f"Передбачений клас для {img_class} зображення: {predicted_class}")
@@ -100,6 +105,9 @@ def show_predictions(disc, img, img_class:str):
 if __name__ == "__main__":
     # Завантаження моделей
     generator, discriminator = load_models()
+
+    # print(f"GENERTATOR\n{generator.summary()}")
+    # print(f"DISCRIMINATOR\n{discriminator.summary()}")
 
     # Ініціалізація початкових станів
     if "loaded_image" not in st.session_state:
@@ -121,7 +129,7 @@ if __name__ == "__main__":
     if st.session_state.loaded_image is not None:
         show_image(img=st.session_state.loaded_image,
                    caption="Завантажене зображення",
-                   height=100)
+                   height=IMAGE_MAX_HEIGTH)
 
         # Підготовка зображення
         prepared_image = prepare_image(st.session_state.loaded_image)
@@ -131,6 +139,7 @@ if __name__ == "__main__":
 
         # Генерація нового зображення
         st.title("Генерація зображення")
+        st.write(f"Prepare IMG shape = {prepared_image.shape}")
         st.button("Згенерувати зображення",
                   key="Gen_Img",
-                  on_click=gen_show_image(generator, discriminator, LATENT_DIM))
+                  on_click=gen_show_image(generator, discriminator, prepared_image, LATENT_DIM))
