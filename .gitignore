@@ -1,9 +1,6 @@
 cifar*
-*.h5
-*.png
 temp*
 docker*
-disc*
 *.toml
 *.lock
 __*
