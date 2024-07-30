@@ -1,8 +1,9 @@
 cifar*
-*model.h5
+*.h5
+*.png
 temp*
+docker*
 disc*
-gen*
 *.toml
 *.lock
 __*
