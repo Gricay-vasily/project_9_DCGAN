@@ -60,17 +60,18 @@ def prepare_image(img):
     img = np.expand_dims(img, axis=0)
     return img
 
-def gen_show_image(gen, disc, real_img, latent_dim):
+def gen_show_image(gen, disc, latent_dim):
     '''Генерація зображення'''
-    st.write(f"real_img.shape = {real_img.shape}")
+    # st.write(f"real_img.shape = {real_img.shape}")
     noise = tf.random.normal([1, latent_dim])
-    st.write(f"noise shape = {noise.shape}")
+    # st.write(f"noise shape = {noise.shape}")
     generated_img = gen.predict(noise, verbose=0)
+    print(np.info(generated_img))
     # Відображення згенерованого зображення
     st.session_state.generated_image = Image.fromarray(generated_img[0], "RGB")
     show_image(img=st.session_state.generated_image,
                 caption="Згенероване зображення",
-                height=IMAGE_MAX_HEIGTH)
+                height=32)
     show_predictions(disc=disc,
                      img=generated_img,
                      img_class="згенерованого")
@@ -139,7 +140,8 @@ if __name__ == "__main__":
 
         # Генерація нового зображення
         st.title("Генерація зображення")
-        st.write(f"Prepare IMG shape = {prepared_image.shape}")
+        # st.write(f"Prepare IMG shape = {prepared_image.shape}")
         st.button("Згенерувати зображення",
                   key="Gen_Img",
-                  on_click=gen_show_image(generator, discriminator, prepared_image, LATENT_DIM))
+                  on_click=gen_show_image(generator, discriminator, LATENT_DIM)
+                  )
