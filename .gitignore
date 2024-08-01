@@ -4,3 +4,4 @@ docker*
 *.toml
 *.lock
 __*
+pyTorch*
